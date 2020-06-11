@@ -1,5 +1,6 @@
-# AutoRing.pyw GUI
-# 模拟学校上下课铃的程序
+# AutoRing.pyw GUI ar_gui.pyw Not Stable
+# 模拟学校上下课铃的程序 GUI部分 不稳定
+# Version: developer beta
 # Author:lwd-temp
 # https://github.com/lwd-temp/AutoRing.py
 # 需要库pywin32(GUI) tkinter(GUI)
@@ -101,7 +102,7 @@ def sleepto(hour,minute):
     time.sleep(delta)
  
 def ringat(hour,minute,msg):
-    # 在某时提醒，超过2h不提醒
+    # 在某时提醒，超过3h不提醒
     logit("[RingAt]"+str(hour)+" "+str(minute)+" "+str(msg))
     passit=0
     nowtime=datetime.datetime.now()
@@ -113,7 +114,7 @@ def ringat(hour,minute,msg):
     thetime=datetime.datetime.strptime(strthe,"%Y-%m-%d %H:%M:%S.%f")
     delta=(thetime-nowtime).seconds
     logit("[RingAt]"+"Delta:"+str(delta))
-    if delta>=7200:
+    if delta>=10800:
         passit=1
         logit("[RingAt]Pass")
     if passit==0:

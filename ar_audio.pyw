@@ -1,5 +1,6 @@
-# AutoRing.pyw Audio
-# 模拟学校上下课铃的程序
+# AutoRing.pyw Audio ar_audio.pyw
+# 模拟学校上下课铃的程序 音频部分
+# Version: stable
 # Author:lwd-temp
 # https://github.com/lwd-temp/AutoRing.py
 # 需要库pygame(Sound)
@@ -43,7 +44,7 @@ def sleepto(hour,minute):
     time.sleep(delta)
  
 def ringat(hour,minute,msg):
-    # 在某时提醒，超过2h不提醒
+    # 在某时提醒，超过3h不提醒
     logit("[RingAt]"+str(hour)+" "+str(minute)+" "+str(msg))
     passit=0
     nowtime=datetime.datetime.now()
@@ -55,15 +56,13 @@ def ringat(hour,minute,msg):
     thetime=datetime.datetime.strptime(strthe,"%Y-%m-%d %H:%M:%S.%f")
     delta=(thetime-nowtime).seconds
     logit("[RingAt]"+"Delta:"+str(delta))
-    if delta>=7200:
+    if delta>=10800:
         passit=1
         logit("[RingAt]Pass")
     if passit==0:
         logit("[RingAt]Sleeping...")
         time.sleep(delta)
         playsound()
-        # 用空白刷新屏幕浮动字符
-        # 不是个好办法但目前只能如此
  
 ringat(8,0,"1:Class Begin")
 ringat(8,40,"1:Class Over")
@@ -80,8 +79,9 @@ ringat(14,30,"6:Class Over")
 ringat(14,40,"7:Class Begin")
 ringat(15,20,"7:Class Over")
 ringat(15,50,"8:Class Begin")
-ringat(16,30,"8:Class Over")
-ringat(16,40,"9:Class Begin")
+# ringat(16,30,"8:Class Over")
+# ringat(16,40,"9:Class Begin")
+# Removed those RingAt due to the user's request.
 ringat(17,20,"9:Class Over")
 ringat(17,50,"1st Self-study Begin")
 ringat(18,50,"1st Self-study Over")

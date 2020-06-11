@@ -1,8 +1,7 @@
 # AutoRing.py
 A Python script for taking the place of the school alarm.
 
-用于替代学校上下课铃的Python程序。
-
+用于替代学校上下课铃的Python程序。（几乎稳定的版本）
 # 使用方法
 运行两个Python文件。
 
@@ -13,4 +12,4 @@ A Python script for taking the place of the school alarm.
 修改alarm.mp3文件。
 
 # 版权声明
-主程序代码由@lwd-temp 编写，铃声文件来源不明。
+主程序代码由GitHub用户lwd-temp编写，铃声文件来源不明。
