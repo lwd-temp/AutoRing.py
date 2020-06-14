@@ -11,5 +11,14 @@ A Python script for taking the place of the school alarm.
 # 修改铃声
 修改alarm.mp3文件。
 
-# 版权声明
-主程序代码由GitHub用户lwd-temp编写，铃声文件来源不明。
+# 关于资源文件
+铃声文件来源不明。
+
+# TODO
+playsound(filename)
+
+logit("msg","msgSource",loglevel)
+
+config file
+
+More stable GUI
