@@ -7,11 +7,14 @@
 # 这是个不理想的GUI，包含各种错误和可能的问题。
 # 使用shell调用
 # 显示第一个参数10s
-import tkinter
+import sys
 import threading
 import time
-import win32api, win32con, pywintypes
-import sys
+import tkinter
+
+import pywintypes
+import win32api
+import win32con
 
 arg=sys.argv
 

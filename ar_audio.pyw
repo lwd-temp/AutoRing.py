@@ -4,15 +4,16 @@
 # Author:lwd-temp
 # https://github.com/lwd-temp/AutoRing.py
 # 需要第三方库pygame(Sound)
-import time
 import datetime
-import pygame
+import json
 import logging
 import os
 import random
 import subprocess
 import threading
+import time
 
+import pygame
 
 # 初始化Pygame Mixer
 pygame.mixer.init(buffer=10240)
@@ -107,12 +108,24 @@ def randPlaySound():
     # 1.mp3 2.mp3 3.mp3 4.mp3 etc.
     # 随机播放音频
     # 文件名1.mp3 2.mp3 ...... 17.mp3
-    randnum = random.randint(1, 16)
+    randnum = random.randint(1, 30)
     # randnum = 17  # Force 17 强制“随机”
     randstr = str(randnum)
     fnstr = randstr+".mp3"
     infoLog("randPlaySound", fnstr)
-    playSound(fnstr)
+    try:
+        infoLog("json", "Try")  # 与autoconvert.py配合使用
+        with open("music.json", "r") as data:
+            filen = json.load(data)
+        infoLog("json", str(filen))
+        with open(filen, "r") as testfile:  # 检测文件存在性
+            infoLog("chkfile", "File exists.")
+        playSound(filen)
+        with open("music.json", "w") as data:  # 覆写json使其失效
+            data.write("init")
+    except:
+        infoLog("json", "Failed.")  # 若出错
+        playSound(fnstr)
 
 
 def showMsgMain(msg):
@@ -196,10 +209,10 @@ def pyExecAt(hour, minute, second=0, code="print('No command.')"):
 
 def shutitdown():
     # 关机操作
-    os.system("shutdown -s -t 600")# 10分钟定时关机
-    time.sleep(10)# 等待执行和GUI提示
-    os.system("rundll32.exe user32.dll,LockWorkStation")# 锁定工作站
-    time.sleep(300)# 等待音乐播放完成退出程序 5分钟
+    os.system("shutdown -s -t 600")  # 10分钟定时关机
+    time.sleep(10)  # 等待执行和GUI提示
+    os.system("rundll32.exe user32.dll,LockWorkStation")  # 锁定工作站
+    time.sleep(540)  # 等待音乐播放完成退出程序 9分钟
 
 
 def dailySchedule():
@@ -236,10 +249,10 @@ def dailySchedule():
     elif getWeekday() == 7:
         # 若周日
         infoLog("dailySchedule", "Today is Sunday.")
-        ringAt(8, 20, 0, 2, "1Sun:Over")
-        ringAt(8, 30, 0, 1, "2Sun:Begin")
-        ringAt(10, 0, 0, 2, "3Sun:Over")
-        ringAt(10, 30, 0, 1, "3Sun:Begin")
+##        ringAt(8, 20, 0, 2, "1Sun:Over")
+##        ringAt(8, 30, 0, 1, "2Sun:Begin")
+##        ringAt(10, 0, 0, 2, "3Sun:Over")
+##        ringAt(10, 30, 0, 1, "3Sun:Begin")
         ringAt(12, 0, 0, 3, "SchoolOver")
         pyExecAt(12, 0, 30, "shutitdown()")
     else:
@@ -272,21 +285,21 @@ def dailySchedule():
         pyExecAt(22, 0, 30, "shutitdown()")
 
 
-def debugSchedule():
-    # 测试用时间表
-    infoLog("debugSchedule", "Debug!")
-    if getWeekday() == 1:
-        infoLog("debugSchedule", "Debug Monday")
-        ringAt(0, 35, 0, 1, "Class Begin")
-        ringAt(0, 35, 30, 2, "Class Over")
-        ringAt(0, 36, 0, 3, "After School")
-        time.sleep(180)
-    else:
-        infoLog("debugSchedule", "Debug NOT Monday")
-        ringAt(0, 30, 0, 1, "Class Begin")
-        ringAt(0, 31, 0, 2, "Class Over")
-        ringAt(0, 32, 0, 3, "After School")
-        time.sleep(180)
+# def debugSchedule():
+# 测试用时间表
+##    infoLog("debugSchedule", "Debug!")
+# if getWeekday() == 1:
+##        infoLog("debugSchedule", "Debug Monday")
+##        ringAt(0, 35, 0, 1, "Class Begin")
+##        ringAt(0, 35, 30, 2, "Class Over")
+##        ringAt(0, 36, 0, 2, "After School")
+# time.sleep(180)
+# else:
+##        infoLog("debugSchedule", "Debug NOT Monday")
+##        ringAt(0, 30, 0, 1, "Class Begin")
+##        ringAt(0, 31, 0, 2, "Class Over")
+##        ringAt(0, 32, 0, 2, "After School")
+# time.sleep(180)
 
 
 if __name__ == "__main__":
