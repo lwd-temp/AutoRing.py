@@ -109,3 +109,5 @@ with open("music.json", "w") as data:
 logging.info("Done")
 print("完成，你可以安全地关闭窗口了。")
 logging.info("Exit.")
+
+sys.exit()

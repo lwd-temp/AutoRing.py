@@ -1,6 +1,6 @@
 # AutoRing Project Audio Handler ar_audio.pyw
 # 模拟学校上下课铃的程序 音频部分
-# Version: stable--update 2
+# Version: stable-1-Non-LTS
 # Author:lwd-temp
 # https://github.com/lwd-temp/AutoRing.py
 # 需要第三方库pygame(Sound)
@@ -10,6 +10,7 @@ import logging
 import os
 import random
 import subprocess
+import sys
 import threading
 import time
 
@@ -56,6 +57,20 @@ def getSeconds(hour, minute, second=0):
     return delta
 
 
+def sleepTo(hour, minute, second=0):
+    # sleep to sometime
+    delay = 0
+    ##############
+    # Delay to sync with the stupid school timing system.
+    delay = 12
+    infoLog("sleepTo", "delay"+str(delay))
+    ##############
+    infoLog("sleepTo", str(hour)+" "+str(minute)+" "+str(second))
+    delta = getSeconds(hour, minute, second)+delay
+    infoLog("sleepTo", "delta "+str(delta)+" sleep...")
+    time.sleep(delta)
+
+
 def getPass(hour, minute, second=0):
     # Get if pass
     # return 1 when pass
@@ -92,14 +107,26 @@ def getFilename(stat=2):
     intstat = int(stat)
     fn = "alarm.mp3"
     if intstat == 1:
-        # 上课
-        fn = "begin.mp3"
+        # normal上课
+        # fn = "begin.mp3"
+        fn = "nosound.mp3"
     if intstat == 2:
-        # 下课
-        fn = "over.mp3"
+        # normal下课
+        # fn = "over.mp3"
+        fn = "nosound.mp3"
     if intstat == 3:
         # 放学 在此保留Failsafe
-        fn = "afterschool.mp3"
+        # fn = "afterschool.mp3"
+        fn = "nosound.mp3"
+    if intstat == 4:
+        # special上课
+        fn = "begin.mp3"
+    if intstat == 5:
+        # special下课
+        fn = "over.mp3"
+    if intstat == 6:
+        # No sound
+        fn = "nosound.mp3"
     return fn
 
 
@@ -107,8 +134,8 @@ def randPlaySound():
     # Random Music Player
     # 1.mp3 2.mp3 3.mp3 4.mp3 etc.
     # 随机播放音频
-    # 文件名1.mp3 2.mp3 ...... 17.mp3
-    randnum = random.randint(1, 30)
+    # 文件名1.mp3 2.mp3 ...... 17.mp3 ...... 30.mp3
+    randnum = random.randint(1, 30)  # 生成文件名中的随机数部分
     # randnum = 17  # Force 17 强制“随机”
     randstr = str(randnum)
     fnstr = randstr+".mp3"
@@ -171,18 +198,13 @@ def ringAt(hour, minute, second=0, stat=1, info="UNKNOWN"):
     # 可以用多线程代替上述方案
     infoLog("ringAt", str(hour)+":"+str(minute)+":" +
             str(second)+" "+str(stat)+" "+str(info))
-    delta = getSeconds(hour, minute, second)
-    infoLog("ringAt", "Delta "+str(delta))
     if getPass(hour, minute, second) == 1:
         infoLog("ringAt", "Pass!")
     else:
         infoLog("ringAt", "Sleeping...")
-        time.sleep(delta)
+        sleepTo(hour, minute, second)
         filename = getFilename(stat)
         stat = int(stat)
-        # Delay to sync with the school timing
-        # time.sleep(22)
-        # F**k the stupid school timing system.
         if stat != 3:
             playSound(filename)
         if stat == 3:
@@ -196,13 +218,11 @@ def pyExecAt(hour, minute, second=0, code="print('No command.')"):
     # 调用举例pyExecAt(小时，分钟，秒，Python代码)
     infoLog("pyExecAt", str(hour)+":"+str(minute)+":" +
             str(second)+" "+str(code))
-    delta = getSeconds(hour, minute, second)
-    infoLog("pyExecAt", "Delta "+str(delta))
     if getPass(hour, minute, second) == 1:
         infoLog("pyExecAt", "Pass!")
     else:
         infoLog("pyExecAt", "Sleeping...")
-        time.sleep(delta)
+        sleepTo(hour, minute, second)
         infoLog("pyExecAt", "Exec")
         exec(code)
 
@@ -214,9 +234,232 @@ def shutitdown():
     os.system("rundll32.exe user32.dll,LockWorkStation")  # 锁定工作站
     time.sleep(540)  # 等待音乐播放完成退出程序 9分钟
 
+#######################################################
+
+
+def showTextScript():
+    # 仅作紧急用途 不建议在生产环境使用
+    # AutoRing Project GUI showtext.pyw Not Stable
+    # 模拟学校上下课铃的程序 GUI部分 不稳定
+    # Version: release
+    # Author:lwd-temp
+    # https://github.com/lwd-temp/AutoRing.py
+    # 需要库pywin32(GUI) tkinter(GUI)
+    # 这是个不理想的GUI，包含各种错误和可能的问题。
+    # 使用shell调用
+    # 显示第一个参数10s
+    import sys
+    import threading
+    import time
+    import tkinter
+
+    import pywintypes
+    import win32api
+    import win32con
+
+    arg = sys.argv
+    try:
+        text = arg[2]  # It's [2] here.
+    except:
+        text = "Arg Error"
+
+    print(text)
+
+    def showmsg(textmsg):
+        # 浮动文字
+        # Source:https://stackoverflow.com/questions/21840133/how-to-display-text-on-the-screen-without-a-window-using-python
+        label = tkinter.Label(text=textmsg, font=(
+            'Times New Roman', '80'), fg='red', bg='white')
+        label.master.overrideredirect(True)
+        label.master.geometry("+0+300")
+        label.master.lift()
+        label.master.wm_attributes("-topmost", True)
+        label.master.wm_attributes("-disabled", True)
+        label.master.wm_attributes("-transparentcolor", "white")
+
+        hWindow = pywintypes.HANDLE(int(label.master.frame(), 16))
+        # http://msdn.microsoft.com/en-us/library/windows/desktop/ff700543(v=vs.85).aspx
+        # The WS_EX_TRANSPARENT flag makes events (like mouse clicks) fall through the window.
+        exStyle = win32con.WS_EX_COMPOSITED | win32con.WS_EX_LAYERED | win32con.WS_EX_NOACTIVATE | win32con.WS_EX_TOPMOST | win32con.WS_EX_TRANSPARENT
+        win32api.SetWindowLong(hWindow, win32con.GWL_EXSTYLE, exStyle)
+
+        def des():
+            # 显示时间10s
+            time.sleep(10)
+            label.destroy()
+            label.quit()
+
+        ddd = threading.Thread(target=des)
+        ddd.start()
+
+        label.pack()
+        label.mainloop()
+
+    showmsg(text)
+    sys.exit()
+#######################################################
+#######################################################
+
+
+def autoConvertScript():
+    # 自助式自动化放学铃设置
+    # 仅作紧急用途 不建议在生产环境使用
+    import datetime
+    import json
+    import logging
+    import subprocess
+    import sys
+
+    # To disable functions.
+    #########################
+    # oped = 1
+    #########################
+
+    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(filename='ac.log',
+                        level=logging.DEBUG, format=LOG_FORMAT)
+
+    nowtime = datetime.datetime.now()
+    filename = str(nowtime.year)+str(nowtime.month)+str(nowtime.day) + \
+        str(nowtime.hour)+str(nowtime.minute)+str(nowtime.second)+".mp3"
+    logging.info("Run")
+
+    # Call ffmpeg
+
+    def ffmpeg(infi, outfi):
+        logging.info("ffmpeg "+str(infi)+" "+str(outfi))
+        subprocess.call(["ffmpeg", "-i", str(infi), str(outfi)])
+        logging.info("ffmpeg exit")
+
+    print("自助式自动化放学铃设置 Beta2坂本")
+    print("您的所有操作都将被记录备案，请不要恶意提交。")
+    # print("不一定需要重命名媒体文件为123并将其复制到桌面")
+
+    try:
+        logging.info("Try to read json.")
+        with open("music.json", "r") as data:
+            filen = json.load(data)
+        logging.info("Json exists.")
+        with open(filen, "r") as testfile:
+            logging.info("File exists.")
+        print("已存在人工设置")
+        logging.info("Operation exists.")
+        oped = 1
+    except:
+        logging.info("OK.")
+        print("当前无人工设置")
+        oped = 0
+
+    if oped == 1:
+        print("当日已存在人工设置，为确保不覆写设置已禁止操作")
+        print("按Enter退出程序")
+        userinput = input()
+        if userinput != "debug":
+            sys.exit()
+        else:
+            print("Input Debugger Key:")
+            dkr = str(nowtime.year+1)+str(nowtime.month*2)+str(nowtime.day+1)
+            dk = input()
+            if dk == dkr:
+                logging.info("Hello,debugger!")
+                print("Hello,debugger!")
+                with open("music.json", "w") as data:
+                    data.write("init")
+                    logging.info("Json rewrite.")
+                    print("Json已覆写")
+            else:
+                print("Wrong")
+                sys.exit()
+
+    fp = input("输入媒体文件路径或直接将文件拖入窗口并按下Enter：")
+    logging.info("用户输入："+fp)
+
+    print("用户输入："+fp)
+
+    # Fix cmd file dragging path complete feature
+    if fp[0] == '"':
+        if fp[-1] == '"':
+            fp = fp[1:-1]
+
+    logging.info("文件路径："+fp)
+
+    print("文件路径："+fp)
+
+    comment = input("输入本次提交描述并按Enter：")
+    logging.info("Comment:"+comment)
+
+    with open(fp, "r") as testfile:
+        print("文件存在")
+        logging.debug("File exists.")
+
+    print("调用ffmpeg，请注意错误信息")
+    ffmpeg(fp, filename)
+    print("转码结束，请注意错误信息")
+
+    try:
+        with open(filename, "r") as testfile:
+            logging.info("File ok.")
+    except:
+        logging.info("File failed.")
+        print("文件未生成，转码错误")
+        sys.exit()
+
+    print("写入json")
+    logging.info("Try to write json.")
+    with open("music.json", "w") as data:
+        json.dump(filename, data)
+
+    logging.info("Done")
+    print("完成，你可以安全地关闭窗口了。")
+    logging.info("Exit.")
+
+    sys.exit()
+#######################################################
+
+
+def console():
+    # Console Mode
+    infoLog("env", "Welcome to the AR Console!")
+    infoLog("env", "Hello from the AR Developer!")
+    infoLog("HELP", "ringAt(hour,minute,second,stat,info)")
+    infoLog("HELP", "stat:1-normBegin 2-normOver 3-AfterSchool 4-specBegin 5-specOver 6-NoSound")
+    infoLog("HELP", "infoLog(origin,msg)")
+    infoLog("HELP", "getSeconds(hour,minute,second)")
+    infoLog("HELP", "playSound(filename)")
+    infoLog("HELP", "pyExecAt(hour,minute,second,code)")
+    infoLog("HELP", "showMsg(msg)")
+    infoLog("console", "Syntax: FUNCTION [ARG1] [ARG2] ...")
+    while True:
+        userinput = input("ARConsole>>>")
+        while userinput == "":
+            print("Empty")
+            userinput = input("ARConsole>>>")
+        userinput = userinput.split()
+        infoLog("console", str(userinput))
+        if userinput[0] == "exit":
+            infoLog("console", "exit")
+            sys.exit()
+        else:
+            userfunc = userinput[0]
+            infoLog("console", userfunc)
+            try:
+                userarg = userinput[1:]
+                infoLog("console", str(userarg))
+            except:
+                userarg = []
+                infoLog("console", "empty arg")
+        try:
+            infoLog("console", "run")
+            execthread = "threading.Thread(target=" + \
+                str(userfunc)+", args="+str(userarg)+").start()"
+            exec(execthread)
+        except:
+            infoLog("console", "ERROR")
+
 
 def dailySchedule():
     # 标准时间表
+    infoLog("env", "Hello from the AR Developer!")
     if getWeekday() == 1:
         # 若周一
         infoLog("dailySchedule", "Today is Monday")
@@ -303,15 +546,37 @@ def dailySchedule():
 
 if __name__ == "__main__":
     # 若直接运行
-    dailySchedule()
+    # dailySchedule()
+    argu = sys.argv
+    infoLog("env", "Run with argv:"+str(argu))
+    if "showmsg" in argu:
+        infoLog("env", "showmsg")
+        showTextScript()
+    elif "autoconvert" in argu:
+        infoLog("env", "autoconvert")
+        autoConvertScript()
+    elif "console" in argu:
+        infoLog("env", "console")
+        console()
+    elif "help" in argu:
+        infoLog("env", "help")
+        infoLog("HELP", "Available Args:(blank)/showmsg text/autoconvert/console/help")
+    else:
+        infoLog("env", "dailySchedule")
+        dailySchedule()
+
 
 if __name__ != "__main__":
     # 若被import
     infoLog("env", "Imported")
+    infoLog("env", "Hello from the AR Developer!")
     infoLog("HELP", "ringAt(hour,minute,second,stat,info)")
-    infoLog("HELP", "stat:1-Begin 2-Over 3-AfterSchool")
+    infoLog("HELP", "stat:1-normBegin 2-normOver 3-AfterSchool 4-specBegin 5-specOver 6-NoSound")
     infoLog("HELP", "infoLog(origin,msg)")
     infoLog("HELP", "getSeconds(hour,minute,second)")
     infoLog("HELP", "playSound(filename)")
     infoLog("HELP", "pyExecAt(hour,minute,second,code)")
     infoLog("HELP", "showMsg(msg)")
+
+
+infoLog("env", "End of Script")

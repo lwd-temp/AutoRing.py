@@ -16,39 +16,44 @@ import pywintypes
 import win32api
 import win32con
 
-arg=sys.argv
-
-text=arg[1]
+arg = sys.argv
+try:
+    text = arg[1]
+except:
+    text = "Arg Error"
 
 print(text)
+
 
 def showmsg(textmsg):
     # 浮动文字
     # Source:https://stackoverflow.com/questions/21840133/how-to-display-text-on-the-screen-without-a-window-using-python
-    label = tkinter.Label(text=textmsg, font=('Times New Roman','80'), fg='red', bg='white')
+    label = tkinter.Label(text=textmsg, font=(
+        'Times New Roman', '80'), fg='red', bg='white')
     label.master.overrideredirect(True)
     label.master.geometry("+0+300")
     label.master.lift()
     label.master.wm_attributes("-topmost", True)
     label.master.wm_attributes("-disabled", True)
     label.master.wm_attributes("-transparentcolor", "white")
- 
+
     hWindow = pywintypes.HANDLE(int(label.master.frame(), 16))
     # http://msdn.microsoft.com/en-us/library/windows/desktop/ff700543(v=vs.85).aspx
     # The WS_EX_TRANSPARENT flag makes events (like mouse clicks) fall through the window.
     exStyle = win32con.WS_EX_COMPOSITED | win32con.WS_EX_LAYERED | win32con.WS_EX_NOACTIVATE | win32con.WS_EX_TOPMOST | win32con.WS_EX_TRANSPARENT
     win32api.SetWindowLong(hWindow, win32con.GWL_EXSTYLE, exStyle)
- 
+
     def des():
         # 显示时间10s
         time.sleep(10)
         label.destroy()
         label.quit()
- 
-    ddd=threading.Thread(target=des)
+
+    ddd = threading.Thread(target=des)
     ddd.start()
- 
+
     label.pack()
     label.mainloop()
+
 
 showmsg(text)
