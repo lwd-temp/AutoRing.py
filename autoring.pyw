@@ -1,5 +1,5 @@
-# AutoRing Project Audio Handler with Optional Parts ar_audio.pyw
-# 模拟学校上下课铃的程序 音频部分和可选外部程序
+# AutoRing Project Main App autoring.pyw
+# AutoRing项目主程序
 # Version: stable-1-Non-LTS-BugFix-Final
 # Author: lwd-temp
 # https://github.com/lwd-temp/AutoRing.py
