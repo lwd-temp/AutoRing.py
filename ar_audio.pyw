@@ -1,9 +1,9 @@
-# AutoRing Project Audio Handler ar_audio.pyw
-# 模拟学校上下课铃的程序 音频部分
-# Version: stable-1-Non-LTS
+# AutoRing Project Audio Handler with Optional Parts ar_audio.pyw
+# 模拟学校上下课铃的程序 音频部分和可选外部程序
+# Version: stable-1-Non-LTS-BugFix
 # Author:lwd-temp
 # https://github.com/lwd-temp/AutoRing.py
-# 需要第三方库pygame(Sound)
+# 需要第三方库pygame(Sound) 可能需要pywin32 tkinter(GUI) 外部二进制程序cmdmp3 ffmpeg
 import datetime
 import json
 import logging
@@ -66,7 +66,7 @@ def sleepTo(hour, minute, second=0):
     infoLog("sleepTo", "delay"+str(delay))
     ##############
     infoLog("sleepTo", str(hour)+" "+str(minute)+" "+str(second))
-    delta = getSeconds(hour, minute, second)+delay
+    delta = getSeconds(int(hour), int(minute), int(second))+delay
     infoLog("sleepTo", "delta "+str(delta)+" sleep...")
     time.sleep(delta)
 
@@ -77,14 +77,14 @@ def getPass(hour, minute, second=0):
     # 获取是否已过当前时间
     nowtime = datetime.datetime.now()
     ifpass = 0
-    if hour < nowtime.hour:
+    if int(hour) < nowtime.hour:
         ifpass = 1
-    if hour == nowtime.hour:
-        if minute < nowtime.minute:
+    if int(hour) == nowtime.hour:
+        if int(minute) < nowtime.minute:
             ifpass = 1
-    if hour == nowtime.hour:
-        if minute == nowtime.minute:
-            if second < nowtime.second:
+    if int(hour) == nowtime.hour:
+        if int(minute) == nowtime.minute:
+            if int(second) < nowtime.second:
                 ifpass = 1
     return ifpass
 
@@ -198,11 +198,11 @@ def ringAt(hour, minute, second=0, stat=1, info="UNKNOWN"):
     # 可以用多线程代替上述方案
     infoLog("ringAt", str(hour)+":"+str(minute)+":" +
             str(second)+" "+str(stat)+" "+str(info))
-    if getPass(hour, minute, second) == 1:
+    if getPass(int(hour), int(minute), int(second)) == 1:
         infoLog("ringAt", "Pass!")
     else:
         infoLog("ringAt", "Sleeping...")
-        sleepTo(hour, minute, second)
+        sleepTo(int(hour), int(minute), int(second))
         filename = getFilename(stat)
         stat = int(stat)
         if stat != 3:
@@ -218,11 +218,11 @@ def pyExecAt(hour, minute, second=0, code="print('No command.')"):
     # 调用举例pyExecAt(小时，分钟，秒，Python代码)
     infoLog("pyExecAt", str(hour)+":"+str(minute)+":" +
             str(second)+" "+str(code))
-    if getPass(hour, minute, second) == 1:
+    if getPass(int(hour), int(minute), int(second)) == 1:
         infoLog("pyExecAt", "Pass!")
     else:
         infoLog("pyExecAt", "Sleeping...")
-        sleepTo(hour, minute, second)
+        sleepTo(int(hour), int(minute), int(second))
         infoLog("pyExecAt", "Exec")
         exec(code)
 
@@ -262,6 +262,8 @@ def showTextScript():
         text = arg[2]  # It's [2] here.
     except:
         text = "Arg Error"
+
+    infoLog("showTextScript", text)
 
     print(text)
 
@@ -315,38 +317,34 @@ def autoConvertScript():
     # oped = 1
     #########################
 
-    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(filename='ac.log',
-                        level=logging.DEBUG, format=LOG_FORMAT)
-
     nowtime = datetime.datetime.now()
     filename = str(nowtime.year)+str(nowtime.month)+str(nowtime.day) + \
         str(nowtime.hour)+str(nowtime.minute)+str(nowtime.second)+".mp3"
-    logging.info("Run")
+    infoLog("autoConvertScript", "Run")
 
     # Call ffmpeg
 
     def ffmpeg(infi, outfi):
-        logging.info("ffmpeg "+str(infi)+" "+str(outfi))
+        infoLog("autoConvertScript", "ffmpeg "+str(infi)+" "+str(outfi))
         subprocess.call(["ffmpeg", "-i", str(infi), str(outfi)])
-        logging.info("ffmpeg exit")
+        infoLog("autoConvertScript", "ffmpeg exit")
 
     print("自助式自动化放学铃设置 Beta2坂本")
     print("您的所有操作都将被记录备案，请不要恶意提交。")
     # print("不一定需要重命名媒体文件为123并将其复制到桌面")
 
     try:
-        logging.info("Try to read json.")
+        infoLog("autoConvertScript", "Try to read json.")
         with open("music.json", "r") as data:
             filen = json.load(data)
-        logging.info("Json exists.")
+        infoLog("autoConvertScript", "Json exists.")
         with open(filen, "r") as testfile:
-            logging.info("File exists.")
+            infoLog("autoConvertScript", "File exists.")
         print("已存在人工设置")
-        logging.info("Operation exists.")
+        infoLog("autoConvertScript", "Operation exists.")
         oped = 1
     except:
-        logging.info("OK.")
+        infoLog("autoConvertScript", "OK.")
         print("当前无人工设置")
         oped = 0
 
@@ -361,18 +359,18 @@ def autoConvertScript():
             dkr = str(nowtime.year+1)+str(nowtime.month*2)+str(nowtime.day+1)
             dk = input()
             if dk == dkr:
-                logging.info("Hello,debugger!")
+                infoLog("autoConvertScript", "Hello,debugger!")
                 print("Hello,debugger!")
                 with open("music.json", "w") as data:
                     data.write("init")
-                    logging.info("Json rewrite.")
+                    infoLog("autoConvertScript", "Json rewrite.")
                     print("Json已覆写")
             else:
                 print("Wrong")
                 sys.exit()
 
     fp = input("输入媒体文件路径或直接将文件拖入窗口并按下Enter：")
-    logging.info("用户输入："+fp)
+    infoLog("autoConvertScript", "用户输入："+fp)
 
     print("用户输入："+fp)
 
@@ -381,16 +379,16 @@ def autoConvertScript():
         if fp[-1] == '"':
             fp = fp[1:-1]
 
-    logging.info("文件路径："+fp)
+    infoLog("autoConvertScript", "文件路径："+fp)
 
     print("文件路径："+fp)
 
     comment = input("输入本次提交描述并按Enter：")
-    logging.info("Comment:"+comment)
+    infoLog("autoConvertScript", "Comment:"+comment)
 
     with open(fp, "r") as testfile:
         print("文件存在")
-        logging.debug("File exists.")
+        infoLog("autoConvertScript", "File exists.")
 
     print("调用ffmpeg，请注意错误信息")
     ffmpeg(fp, filename)
@@ -398,20 +396,20 @@ def autoConvertScript():
 
     try:
         with open(filename, "r") as testfile:
-            logging.info("File ok.")
+            infoLog("autoConvertScript", "File ok.")
     except:
-        logging.info("File failed.")
+        infoLog("autoConvertScript", "File failed.")
         print("文件未生成，转码错误")
         sys.exit()
 
     print("写入json")
-    logging.info("Try to write json.")
+    infoLog("autoConvertScript", "Try to write json.")
     with open("music.json", "w") as data:
         json.dump(filename, data)
 
-    logging.info("Done")
+    infoLog("autoConvertScript", "Done")
     print("完成，你可以安全地关闭窗口了。")
-    logging.info("Exit.")
+    infoLog("autoConvertScript", "Exit.")
 
     sys.exit()
 #######################################################
@@ -457,6 +455,38 @@ def console():
             infoLog("console", "ERROR")
 
 
+def zwt():
+    # 此彩蛋即将结束支持
+    # HappyBirthdayZWT
+    # This code is used as an Easter Egg.
+    # lwd-temp@Github.com 2019 版权所有 © 保留所有权利。
+    # ZWT 开源许可证版本0.1
+    # 在符合下列条件的情况下，
+    # 特此免费向任何得到本授权作品的副本（包括源代码、文件和/或相关内容，以下统称为“授权作
+    # 品”）的个人和法人实体授权：
+    # 被授权个人或法人实体无权以任何目的处置授权作品：
+    # 1.个人或法人实体只被授权了对授权作品的阅读和执行权利，禁止修改、商用或作公开用途。
+    # 2.个人或法人实体必须铭记项目名称和授权作品有有效输出的具体执行时间。
+    # 3.个人或法人实体不得传播或向他人推荐授权作品。
+    # 该授权作品是"按原样"提供，不做任何明示或暗示的保证，包括但不限于对适销性、特定用途适用
+    # 性和非侵权性的保证。在任何情况下，无论是在合同诉讼、侵权诉讼或其他诉讼中，版权持有人均
+    # 不承担因本软件或本软件的使用或其他交易而产生、引起或与之相关的任何索赔、损害或其他责任。
+    # For the most adorable one.
+    import datetime
+    date = datetime.datetime.today()
+    if date.month == 4:
+        if date.day >= 20:
+            infoLog("zwt", "Happy birthday ZWT!")
+    if date.month == 5:
+        if date.day == 5:
+            count = 0
+            while count != 4:
+                infoLog("zwt", "Happy birthday ZWT!")
+                count = count+1
+        if date.day <= 15:
+            infoLog("zwt", "Happy birthday ZWT!")
+
+
 def dailySchedule():
     # 标准时间表
     infoLog("env", "Hello from the AR Developer!")
@@ -483,7 +513,7 @@ def dailySchedule():
         ringAt(18, 40, 0, 2, "1st Self-study Over")
         ringAt(18, 50, 0, 1, "2nd Self-study Begin")
         ringAt(19, 50, 0, 2, "2nd Self-study Over")
-        ringAt(20, 0, 0, 1, "3rd Self-study Begin")
+        ringAt(20, 0, 0, 4, "3rd Self-study Begin")
         ringAt(22, 0, 0, 3, "3rd Self-study Over")
         pyExecAt(22, 0, 30, "shutitdown()")
     elif getWeekday() == 7:
@@ -514,7 +544,7 @@ def dailySchedule():
         ringAt(18, 40, 0, 2, "1st Self-study Over")
         ringAt(18, 50, 0, 1, "2nd Self-study Begin")
         ringAt(19, 50, 0, 2, "2nd Self-study Over")
-        ringAt(20, 0, 0, 1, "3rd Self-study Begin")
+        ringAt(20, 0, 0, 4, "3rd Self-study Begin")
         ringAt(22, 0, 0, 3, "3rd Self-study Over")
         pyExecAt(22, 0, 30, "shutitdown()")
     else:
@@ -539,7 +569,7 @@ def dailySchedule():
         ringAt(18, 40, 0, 2, "1st Self-study Over")
         ringAt(18, 50, 0, 1, "2nd Self-study Begin")
         ringAt(19, 50, 0, 2, "2nd Self-study Over")
-        ringAt(20, 0, 0, 1, "3rd Self-study Begin")
+        ringAt(20, 0, 0, 4, "3rd Self-study Begin")
         ringAt(22, 0, 0, 3, "3rd Self-study Over")
         pyExecAt(22, 0, 30, "shutitdown()")
 
@@ -561,6 +591,9 @@ if __name__ == "__main__":
     elif "help" in argu:
         infoLog("env", "help")
         infoLog("HELP", "Available Args:(blank)/showmsg text/autoconvert/console/help")
+    elif "zwt" in argu:
+        infoLog("env", "zwt")
+        zwt()
     else:
         infoLog("env", "dailySchedule")
         dailySchedule()
