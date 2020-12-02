@@ -23,7 +23,7 @@ pygame.mixer.init(buffer=10240)
 # 配置logging
 # 设置日志文件名、记录等级和格式
 LOG_FORMAT = "%(asctime)s - %(levelname)s - [%(origin)s] %(message)s"
-logging.basicConfig(filename='ar_audio.log',
+logging.basicConfig(filename='autoring.log',
                     level=logging.DEBUG, format=LOG_FORMAT)
 
 
@@ -242,9 +242,9 @@ def shutitdown():
 def showTextScript(usermsg="No arg."):
     # 仅作紧急用途 不建议在生产环境使用
     # AutoRing Project GUI showtext.pyw Not Stable
-    # 模拟学校上下课铃的程序 GUI部分 不稳定
+    # AutoRing项目 GUI部分 不稳定
     # Version: release
-    # Author:lwd-temp
+    # Author: lwd-temp
     # https://github.com/lwd-temp/AutoRing.py
     # 需要库pywin32(GUI) tkinter(GUI)
     # 这是个不理想的GUI，包含各种错误和可能的问题。
@@ -310,7 +310,7 @@ def showTextScript(usermsg="No arg."):
 
 def autoConvertScript():
     # 仅作紧急用途 不建议在生产环境使用
-    # 自助式自动化放学铃设置
+    # AutoRing项目 自助式自动化放学铃设置
     # import datetime
     # import json
     # import logging
@@ -378,10 +378,14 @@ def autoConvertScript():
                     print("Json已覆写")
             else:
                 print("Wrong Debugger Key.")
-                infoLog("autoConcertScript", "Wrong dk.")
+                infoLog("autoConvertScript", "Wrong dk.")
                 sys.exit()
 
     fp = input("输入媒体文件路径或直接将文件拖入窗口并按下Enter：")
+    while fp == "":
+        infoLog("autoConvertScript", "Empty fp.")
+        fp = input("输入媒体文件路径或直接将文件拖入窗口并按下Enter：")
+
     infoLog("autoConvertScript", "用户输入："+fp)
 
     print("用户输入："+fp)
@@ -445,7 +449,8 @@ def console():
     infoLog("HELP", "showMsg(msg)")
     infoLog("console", "Syntax: FUNCTION [ARG1] [ARG2] ...")
     infoLog("console", "Example: ringAt 12 33 23 3 hello")
-    infoLog("console", "DANGEROUS!The AR Console is designed for developers.\nPlease read the full source code before using the console.")
+    infoLog("console", "DANGEROUS!The AR Console is designed for developers.")
+    infoLog("console", "Please read the full source code before using the console.")
     while True:
         userinput = input("ARConsole>>>")
         while userinput == "":
