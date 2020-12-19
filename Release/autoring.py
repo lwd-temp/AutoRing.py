@@ -20,7 +20,7 @@ import pygame
 
 # 初始化Pygame Mixer
 pygame.mixer.init(buffer=10240)
-# Bigger buffer to avoid strange sound effect when high I/O occures.
+# Bigger buffer to avoid strange sound effect when high I/O occurs.
 
 # 配置logging
 # 设置日志文件名、记录等级和格式
@@ -41,7 +41,7 @@ def playSound(filename="begin.mp3"):
     file = str(filename)
     try:
         pygame.mixer.music.load(file)
-        infoLog("playSound", "Play "+file)
+        infoLog("playSound", "Play "+file+" .")
         pygame.mixer.music.play()
     except:
         infoLog("playSound", "pygame.error!")  # 糟糕的错误处理，需要改进。
@@ -66,11 +66,17 @@ def sleepTo(hour, minute, second=0):
     delay = 0
     #####################################################
     # Delay to sync with the stupid school timing system.
-    delay = 12
-    infoLog("sleepTo", "delay="+str(delay))
+    delay = -60
+    infoLog("sleepTo", "delay="+str(delay)+" .")
     #####################################################
     infoLog("sleepTo", str(hour)+" "+str(minute)+" "+str(second))
     delta = getSeconds(int(hour), int(minute), int(second))+delay
+    if delay < 0:
+        # delay<0时可能出现delta<0导致错误
+        infoLog("sleepTo", "Chk delta "+str(delta)+".")
+        if delta < 0:
+            delta = 1
+            infoLog("sleepTo", "Delta<0,reset.")
     infoLog("sleepTo", "Delta:"+str(delta)+" Sleeping...")
     time.sleep(delta)
 
@@ -174,7 +180,7 @@ def showMsgMain(msg):
     # pythonw需要被加入环境变量PATH
     infoLog("showMsgMain", str(msg))
     subprocess.call(["pythonw", "showtext.pyw", str(msg)])
-    infoLog("showMsgMain", "exit")
+    infoLog("showMsgMain", "Exit.")
 
 
 def showMsg(msg):
@@ -192,7 +198,7 @@ def altPlaySoundMain(file):
     # 避免随机（？）出现的pygame.error影响播放
     infoLog("altPlaySoundMain", str(file))
     subprocess.call(["cmdmp3", str(file)])
-    infoLog("altPlaySoundMain", "exit")
+    infoLog("altPlaySoundMain", "Exit.")
 
 
 def altPlaySound(file):
@@ -221,7 +227,8 @@ def ringAt(hour, minute, second=0, stat=1, info="UNKNOWN"):
             playSound(filename)
         if stat == 3:
             randPlaySound()
-        showMsg(str(info))
+        # 屏幕显示
+        # showMsg(str(info))
 
 
 def pyExecAt(hour, minute, second=0, code="print('No code.')"):
@@ -235,17 +242,26 @@ def pyExecAt(hour, minute, second=0, code="print('No code.')"):
     else:
         infoLog("pyExecAt", "Sleeping...")
         sleepTo(int(hour), int(minute), int(second))
-        infoLog("pyExecAt", "Exec")
+        infoLog("pyExecAt", "Exec.")
         exec(str(code))
 
 
 def shutitdown():
     # 关机操作
     infoLog("shutitdown", "Shutdown.")
-    os.system("shutdown -s -t 600")  # 10分钟定时关机
+    # os.system("shutdown -s -t 600")  # 10分钟定时关机
+    infoLog("shutitdown", "Wait.")
     time.sleep(10)  # 等待执行和GUI提示
+    infoLog("shutitdown", "LockWorkStation")
     os.system("rundll32.exe user32.dll,LockWorkStation")  # 锁定工作站
+    infoLog("shutitdown", "Wait.")
     time.sleep(540)  # 等待音乐播放完成退出程序 9分钟
+    infoLog("shutitdown", "Turn off the monitor.")
+    # 关闭显示器
+    os.system(
+        "powershell (Add-Type '[DllImport(\"user32.dll\")]^public static extern int PostMessage(int hWnd, int hMsg, int wParam, int lParam);' -Name a -Pas)::PostMessage(-1,0x0112,0xF170,2)")
+    infoLog("shutitdown", "Exit.")
+    sys.exit()
 
 #######################################################
 
@@ -336,18 +352,27 @@ def autoConvertScript():
     filename = str(nowtime.year)+"-"+str(nowtime.month)+"-"+str(nowtime.day) + \
         "-"+str(nowtime.hour)+"-"+str(nowtime.minute) + \
         "-"+str(nowtime.second)+".mp3"
-    infoLog("autoConvertScript", "Run")
+    infoLog("autoConvertScript", "Run.")
 
-    # Call ffmpeg
+    def generate_random_str(randomlength=16):
+        # 生成一个指定长度的随机字符串
+        # Source: https://www.jb51.net/article/173670.htm
+        random_str = ''
+        base_str = 'ABCDEFGHIGKLMNOPQRSTUVWXYZabcdefghigklmnopqrstuvwxyz0123456789'
+        length = len(base_str) - 1
+        for i in range(randomlength):
+            random_str += base_str[random.randint(0, length)]
+        return random_str
 
     def ffmpeg(infi, outfi):
+        # Call ffmpeg
         infoLog("autoConvertScript", "ffmpeg "+str(infi)+" "+str(outfi))
         subprocess.call(["ffmpeg", "-i", str(infi), str(outfi)])
-        infoLog("autoConvertScript", "ffmpeg exit")
+        infoLog("autoConvertScript", "ffmpeg exit.")
 
     print("自助式自动化放学铃设置 Beta2版本")
     print("您的所有操作都将被记录备案，请不要恶意提交。")
-    # print("不一定需要重命名媒体文件为123并将其复制到桌面")
+    # print("不一定需要重命名媒体文件为123并将其复制到桌面。")
 
     try:
         infoLog("autoConvertScript", "Try to read json.")
@@ -356,12 +381,12 @@ def autoConvertScript():
         infoLog("autoConvertScript", "Json exists.")
         with open(filen, "r") as testfile:
             infoLog("autoConvertScript", "File exists.")
-        print("已存在人工设置")
+        print("已存在人工设置。")
         infoLog("autoConvertScript", "Operation exists.")
         oped = 1
     except:
         infoLog("autoConvertScript", "Operation chk OK.")
-        print("当前无人工设置")
+        print("当前无人工设置。")
         oped = 0
 
     # To disable functions.
@@ -371,15 +396,15 @@ def autoConvertScript():
 
     if oped == 1:
         print("当日已存在人工设置，为确保不覆写设置已禁止操作。")
-        print("按Enter退出程序")
+        print("按Enter退出程序。")
         userinput = input()
         infoLog("autoConvertScript", str(userinput))
         if userinput != "debug":
             sys.exit()
         else:
             print("Input Debugger Key:")
-            dkr = str(nowtime.year+1)+str(nowtime.month*2) + \
-                str(nowtime.day+1)  # Debugger Key生成
+            dkr = str(nowtime.year+2)+str(nowtime.month*2) + \
+                str(nowtime.day+2)  # Debugger Key生成
             dk = input()
             infoLog("autoConvertScript", str(dk))
             if dk == dkr:
@@ -387,7 +412,7 @@ def autoConvertScript():
                 with open("music.json", "w") as data:
                     data.write("init")
                     infoLog("autoConvertScript", "Json rewrite done.")
-                    print("Json已覆写")
+                    print("Json已覆写。")
             else:
                 infoLog("autoConvertScript", "Wrong Debugger Key.")
                 sys.exit()
@@ -397,28 +422,48 @@ def autoConvertScript():
         infoLog("autoConvertScript", "Empty file path.")
         fp = input("输入媒体文件路径或直接将文件拖入窗口并按下Enter：")
 
-    infoLog("autoConvertScript", "用户输入："+fp)
+    infoLog("autoConvertScript", "用户输入："+fp+" 。")
 
-    print("用户输入："+fp)
+    print("用户输入："+fp+" 。")
+
+    # 特殊验证词汇
+    forbidden_words = ["周杰伦", "摇滚", "流行", "榜", "测试词汇", "热门"]
+
+    for word in forbidden_words:
+        if str(word) in fp:
+            infoLog("autoConvertScript", "Forbidden word in fp:"+str(word))
+            print("检测到可能的非法提交，请输入下方验证码。")
+            randstr = str(generate_random_str(5))
+            infoLog("autoConvertScript", randstr)
+            print("验证码："+randstr)
+            userinstr = input("请输入验证码：")
+            infoLog("autoConvertScript", userinstr)
+            if userinstr == randstr:
+                infoLog("autoConvertScript", "User Check Pass.")
+                print("验证通过。")
+            else:
+                infoLog("autoConvertScript", "User Check Failed.")
+                print("验证失败。")
+                sys.exit()
 
     # Fix cmd file dragging path complete feature
     if fp[0] == '"':
         if fp[-1] == '"':
             fp = fp[1:-1]
 
-    infoLog("autoConvertScript", "文件路径："+fp)
+    infoLog("autoConvertScript", "文件路径："+fp+" 。")
 
-    print("文件路径："+fp)
+    print("文件路径："+fp+" 。")
 
     comment = input("输入本次提交描述并按Enter：")
-    infoLog("autoConvertScript", "Comment:"+comment)
+    infoLog("autoConvertScript", "Comment:"+comment+" .")
 
     try:
         with open(fp, "r") as testfile:
-            print("文件存在")
+            print("文件存在。")
             infoLog("autoConvertScript", "File exists.")
     except:
-        print("文件不存在")
+        print("文件不存在或权限不足。")
         infoLog("autoConvertScript", "File failed.")
         sys.exit()
 
@@ -434,7 +479,7 @@ def autoConvertScript():
         print("文件未生成，转码错误。")
         sys.exit()
 
-    print("写入json")
+    print("写入json。")
     infoLog("autoConvertScript", "Try to write json.")
     with open("music.json", "w") as data:
         json.dump(filename, data)
@@ -466,12 +511,12 @@ def console():
     while True:
         userinput = input("ARConsole>>>")
         while userinput.rstrip() == "":
-            infoLog("console", "Empty")
+            infoLog("console", "Empty.")
             userinput = input("ARConsole>>>")
         userinput = userinput.split()
         infoLog("console", str(userinput))
         if userinput[0] == "exit":
-            infoLog("console", "exit")
+            infoLog("console", "Exit.")
             sys.exit()
         else:
             userfunc = userinput[0]
@@ -481,7 +526,7 @@ def console():
                 infoLog("console", str(userarg))
             except:
                 userarg = []
-                infoLog("console", "Arg Error, use empty arg")
+                infoLog("console", "Arg Error, use empty arg.")
         try:
             infoLog("console", "run")
             execthread = "threading.Thread(target=" + \
@@ -489,7 +534,7 @@ def console():
             infoLog("console", execthread)
             exec(execthread)
         except:
-            infoLog("console", "ERROR")
+            infoLog("console", "ERROR!")
 
 
 def zwt():
@@ -515,7 +560,7 @@ def dailySchedule():
     infoLog("dailySchedule", "Hello from the AR Developer!")
     if getWeekday() == 1:
         # 若周一
-        infoLog("dailySchedule", "Today is Monday")
+        infoLog("dailySchedule", "Today is Monday.")
         ringAt(7, 40, 0, 1, "1:Class Begin")
         ringAt(8, 20, 0, 2, "1:Class Over")
         ringAt(8, 30, 0, 1, "2:Class Begin")
@@ -600,8 +645,12 @@ def dailySchedule():
 if __name__ == "__main__":
     # 若直接运行
     # dailySchedule()
+    infoLog("env", "OS:"+str(os.name)+" .")
+    if os.name != "nt":
+        infoLog("env", "CAUTION:Some functions may only work on Windows.")
+        infoLog("env", "APP may crash on your OS.")
     argu = sys.argv
-    infoLog("env", "Run with argv:"+str(argu))
+    infoLog("env", "Run with argv:"+str(argu)+".")
     if "showmsg" in argu:
         infoLog("env", "showmsg")
         showTextScript()
@@ -629,7 +678,11 @@ if __name__ == "__main__":
 
 if __name__ != "__main__":
     # 若被import
-    infoLog("env", "Imported")
+    infoLog("env", "OS:"+str(os.name)+" .")
+    if os.name != "nt":
+        infoLog("env", "CAUTION:Some functions may only work on Windows.")
+        infoLog("env", "APP may crash on your OS.")
+    infoLog("env", "Imported.")
     infoLog("env", "Hello from the AR Developer!")
     infoLog("HELP", "ringAt(hour,minute,second,stat,info)")
     infoLog("HELP", "stat:1-normBegin 2-normOver 3-AfterSchool 4-specBegin 5-specOver 6-NoSound")
@@ -641,4 +694,4 @@ if __name__ != "__main__":
     infoLog("HELP", "More functions available.Please read the source code.")
 
 
-infoLog("env", "End of Script")
+infoLog("env", "End of Script.")
